@@ -4,9 +4,10 @@ import * as pactum from "pactum";
 import { PrismaService } from "../src/prisma/prisma.service";
 import { AppModule } from "../src/app.module";
 import { AuthDto } from "../src/auth/dto";
-import { EditUserDto } from "src/user/dto";
+import { EditUserDto } from "../src/user/dto";
+import { CreateBookmarkDto } from "../src/bookmark/dto";
 
-describe('App e2e', () => {
+describe("App e2e", () => {
   let app: INestApplication;
   let prisma: PrismaService;
 
@@ -32,13 +33,13 @@ describe('App e2e', () => {
     app.close();
   });
 
-  describe('Auth', () => {
+  describe("Auth", () => {
     const dto: AuthDto = {
       email: "faris@mail.com",
       password: "123123"
     };
 
-    describe('Signup', () => {
+    describe("Signup", () => {
       it("Should throw an error if the email is empty", () => {
         return pactum
           .spec()
@@ -75,7 +76,7 @@ describe('App e2e', () => {
           .inspect();
       });
     });
-    describe('Signin', () => {
+    describe("Signin", () => {
       let accessToken: string;
 
       it("Should throw an error if the email is empty", () => {
@@ -111,14 +112,14 @@ describe('App e2e', () => {
           .post("/auth/signin")
           .withBody(dto)
           .expectStatus(200)
-          .stores('userAt', 'access_token');
+          .stores("userAt", "access_token");
       });
     });
   });
 
-  describe('User', () => {
-    describe('Get me (current user)', () => {
-      it('Should get current user', () => {
+  describe("User", () => {
+    describe("Get me (current user)", () => {
+      it("Should get current user", () => {
         return pactum
           .spec()
           .get("/users/me")
@@ -126,8 +127,8 @@ describe('App e2e', () => {
           .expectStatus(200);
       });
     });
-    describe('Edit User', () => {
-      it('Should edit current user', () => {
+    describe("Edit User", () => {
+      it("Should edit current user", () => {
         const dto: EditUserDto = {
           firstName: "Faresh",
           email: "faresh@mail.com"
@@ -145,12 +146,36 @@ describe('App e2e', () => {
     });
   });
 
-  describe('Bookmark', () => {
-    describe('Create bookmark', () => { });
-    describe('Get bookmarks', () => { });
-    describe('Get bookmark by id', () => { });
-    describe('Edit bookmark by id', () => { });
-    describe('Delete bookmark by id', () => { });
+  describe("Bookmark", () => {
+    describe("Get empty bookmark", () => {
+      it("Should get a bookmark", () => {
+        return pactum
+          .spec()
+          .get("/bookmarks")
+          .withHeaders({ Authorization: "Bearer $S{userAt}" })
+          .expectStatus(200)
+          .expectBody([]);
+      });
+    });
+    describe("Create bookmark", () => {
+      const dto: CreateBookmarkDto = {
+        title: "Bookmark for Me",
+        link: "https://www.youtube.com/watch?v=GHTA143_b-s"
+      };
+
+      it("Should create a bookmark", () => {
+        return pactum
+          .spec()
+          .post("/bookmarks")
+          .withHeaders({ Authorization: "Bearer $S{userAt}" })
+          .withBody(dto)
+          .expectStatus(201);
+      });
+    });
+    describe("Get bookmarks", () => { });
+    describe("Get bookmark by id", () => { });
+    describe("Edit bookmark by id", () => { });
+    describe("Delete bookmark by id", () => { });
   });
 });
 
