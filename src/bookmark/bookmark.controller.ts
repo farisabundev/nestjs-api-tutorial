@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards, HttpCode, HttpStatus, } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards, HttpCode, HttpStatus, UseInterceptors, CacheInterceptor, CacheTTL, CacheKey, } from '@nestjs/common';
 import { GetUser } from '../auth/decorator';
 import { JwtGuard } from '../auth/guard';
 import { BookmarkService } from './bookmark.service';
@@ -9,6 +9,9 @@ import { CreateBookmarkDto, EditBookmarkDto } from './dto';
 export class BookmarkController {
   constructor(private bookmarkService: BookmarkService) { }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('bookmarks')
+  @CacheTTL(30)
   @Get()
   getBookmarks(@GetUser('id') userId: number) {
     return this.bookmarkService.getBookmarks(userId);

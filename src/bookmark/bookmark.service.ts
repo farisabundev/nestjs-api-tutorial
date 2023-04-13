@@ -1,4 +1,5 @@
-import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
+import { CACHE_MANAGER, ForbiddenException, Inject, Injectable, Logger } from '@nestjs/common';
+import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookmarkDto, EditBookmarkDto } from './dto';
 
@@ -6,14 +7,29 @@ import { CreateBookmarkDto, EditBookmarkDto } from './dto';
 export class BookmarkService {
   private readonly logger = new Logger(BookmarkService.name);
 
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheService: Cache,
+  ) { }
 
-  getBookmarks(userId: number) {
-    return this.prisma.bookmark.findMany({
+  async getBookmarks(userId: number) {
+    const cachedData = await this.cacheService.get(userId.toString());
+
+    if (cachedData) {
+      console.log(`Getting data from cache!`);
+      return cachedData;
+    }
+
+    const data = await this.prisma.bookmark.findMany({
       where: {
         userId
       }
     });
+
+    await this.cacheService.set(userId.toString(), data);
+    console.log('Data set to cache', cachedData);
+
+    return data;
   }
 
   getBookmarkById(userId: number, bookmarkId: number) {
